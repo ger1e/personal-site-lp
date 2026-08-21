@@ -1,0 +1,5 @@
+Contact: https://github.com/ger1e
+Expires: 2027-08-21T00:00:00Z
+Preferred-Languages: en, hu
+Canonical: https://gergoilly.hu/.well-known/security.txt
+Policy: https://github.com/ger1e/personal-site-lp/security/policy
