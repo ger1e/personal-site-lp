@@ -9,7 +9,7 @@
         "Referrer-Policy": "strict-origin-when-cross-origin",
         "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()",
         "Strict-Transport-Security": "max-age=31536000",
-        "Content-Security-Policy": "default-src 'none'; style-src 'self'; script-src 'self' 'unsafe-inline' https://js.sentry-cdn.com https://browser.sentry-cdn.com; img-src 'self' data: blob: https://drive.google.com https://*.googleusercontent.com; connect-src 'self' https://o4511932881502208.ingest.de.sentry.io; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; manifest-src 'self'; upgrade-insecure-requests"
+        "Content-Security-Policy": "default-src 'none'; style-src 'self'; script-src 'self' 'unsafe-inline' https://js.sentry-cdn.com https://browser.sentry-cdn.com; img-src 'self' data: blob: https://raw.githubusercontent.com https://drive.google.com https://drive.usercontent.google.com https://*.googleusercontent.com; connect-src 'self' https://o4511932881502208.ingest.de.sentry.io; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; manifest-src 'self'; upgrade-insecure-requests"
       },
       "continue": true
     },
