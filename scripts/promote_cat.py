@@ -19,7 +19,7 @@ BLOCK = f"""{START}
 
 def transform(html: str) -> str:
     managed = re.compile(r"\n?" + re.escape(START) + r".*?" + re.escape(END) + r"\n?", re.S)
-    cleaned = managed.sub("\n", html, count=1)
+    cleaned = managed.sub("", html, count=1)
     if "</style>" not in cleaned:
         raise ValueError("index.html is missing </style>")
     return cleaned.replace("</style>", f"\n{BLOCK}\n</style>", 1)
