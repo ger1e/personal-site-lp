@@ -44,6 +44,18 @@ class RepositoryAuditTests(unittest.TestCase):
         failures = audit_repository(root)
         self.assertTrue(any("merge-conflict" in failure.lower() for failure in failures))
 
+    def test_inline_marker_literals_are_not_reported(self):
+        root = self.make_repo()
+        (root / "notes.md").write_text(
+            "Detector documentation mentions <<<<<<< / ======= / >>>>>>> markers inline.\n",
+            encoding="utf-8",
+        )
+        (root / "sample.py").write_text(
+            'MARKERS = ("<<<<<<<", "=======", ">>>>>>>")\n',
+            encoding="utf-8",
+        )
+        self.assertEqual(audit_repository(root), [])
+
     def test_committed_env_file_is_reported(self):
         root = self.make_repo()
         (root / ".env").write_text("SECRET=do-not-commit\n", encoding="utf-8")
