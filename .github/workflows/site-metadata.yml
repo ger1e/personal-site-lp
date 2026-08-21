@@ -1,0 +1,38 @@
+name: site-metadata
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: site-metadata-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  metadata:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Inject canonical/social metadata and cat hero overrides
+        run: python scripts/inject_metadata.py --write
+      - name: Tests and structural QA
+        run: |
+          python -m unittest discover -s tests -p 'test_*.py' -v
+          python scripts/qa.py
+          git diff --check
+      - name: Commit managed index changes
+        if: github.event_name != 'pull_request'
+        run: |
+          if git diff --quiet -- index.html; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'chore: refresh site metadata and cat hero'
+          git push
