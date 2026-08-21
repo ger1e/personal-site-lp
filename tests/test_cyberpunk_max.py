@@ -1,54 +1,107 @@
 from pathlib import Path
-import struct
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 PAGE = ROOT / "index.html"
-ASSET = ROOT / "assets" / "rotund-operator-4k.avif"
+CSS = ROOT / "site.css"
+JS = ROOT / "site.js"
 
 
-class CyberpunkMaxContract(unittest.TestCase):
+class CanonicalBlueSiteContract(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.html = PAGE.read_text(encoding="utf-8")
+        cls.css = CSS.read_text(encoding="utf-8")
+        cls.js = JS.read_text(encoding="utf-8")
+        cls.all = "\n".join((cls.html, cls.css, cls.js))
 
-    def test_brand_and_controls(self):
+    def test_identity_and_visual_contract(self):
         for token in (
-            "ム乇 尺 1 乇",
-            "CIGANY.EXE",
-            "HUNT /",
-            "CTI",
-            "/ DETECT",
-            "Behavior. Evidence. Signal.",
-            "ACCESS GIT",
+            "GERGŐ ILLY",
+            "CYBERSECURITY PROFESSIONAL",
+            "Cybersecurity Consultant / Cyber Threat Hunter",
+            "Budapest, Hungary",
+            "#0F62FE",
+            "#78A9FF",
+            "#02060D",
+            "visitor@gergoilly.hu: ~ — zsh",
         ):
-            self.assertIn(token, self.html)
-        self.assertIn('class="sound-link"', self.html)
-        self.assertNotIn("<iframe", self.html)
+            self.assertIn(token, self.all)
+        self.assertNotIn("CIGANY.EXE", self.all)
+        self.assertNotIn("rotund-operator", self.all)
+        self.assertNotIn("sound-link", self.all)
+        self.assertNotIn("spotify", self.all.lower())
 
-    def test_matrix_glitch_and_cursor(self):
-        self.assertIn("const MATRIX_SPEED=3", self.html)
-        for token in ("glitchline", "glitchburst", "chromashift", "panelJolt", "gridRush"):
-            self.assertIn(token, self.html)
-        self.assertIn("polygon points='3,3 29,15 13,20'", self.html)
-        self.assertIn('rel="icon" type="image/svg+xml" href="data:image/svg+xml', self.html)
+    def test_portrait_and_links(self):
+        self.assertIn("1zgxo_yoYnLX6FGoh8CvR7uX9H62ZME5y", self.html)
+        self.assertIn('href="mailto:mail@gergoilly.hu"', self.html)
+        self.assertIn('aria-label="Email Gergő Illy"', self.html)
+        self.assertIn('href="https://linkedin.com/in/gergoilly"', self.html)
+        self.assertIn('target="_blank" rel="noopener noreferrer"', self.html)
 
-    def test_hero_asset(self):
-        self.assertIn('src="assets/rotund-operator-4k.avif"', self.html)
-        self.assertIn('width="3072" height="4096"', self.html)
-        raw = ASSET.read_bytes()
-        self.assertEqual(raw[4:8], b"ftyp")
-        ispe = raw.find(b"ispe")
-        self.assertGreaterEqual(ispe, 0, "AVIF is missing spatial-extents metadata")
-        self.assertGreaterEqual(len(raw), ispe + 16)
-        width, height = struct.unpack(">II", raw[ispe + 8:ispe + 16])
-        self.assertEqual((width, height), (3072, 4096))
+    def test_terminal_rain_and_input_behavior(self):
+        for token in (
+            'id="matrix-bg"',
+            'id="matrix-fg"',
+            "Europe/Budapest",
+            "grid-template-rows:30px minmax(0,1fr) auto",
+            "overscroll-behavior:contain",
+            "history",
+            "ArrowUp",
+            "ArrowDown",
+            "Tab",
+        ):
+            self.assertIn(token, self.all)
+        self.assertNotIn("matrix [normal|dense|off]", self.all)
+        self.assertNotIn("base==='matrix'", self.all)
+        self.assertNotIn("applyMatrix()", self.all)
 
-    def test_accessibility_and_no_bootstrap(self):
-        for token in (":focus-visible", "prefers-reduced-motion:reduce", "@media(pointer:coarse)"):
-            self.assertIn(token, self.html)
-        self.assertNotIn("raw.githubusercontent.com", self.html)
-        self.assertNotIn("DecompressionStream", self.html)
+    def test_glitch_max_controller(self):
+        for token in (
+            "new EventTarget()",
+            "glitch:micro",
+            "glitch:medium",
+            "glitch:catastrophic",
+            "glitch:hard",
+            "scheduleCatastrophic",
+            "scheduleHardFault",
+            "fault-layer",
+            "syncFault",
+            "hardFault",
+            "phosphorHit",
+        ):
+            self.assertIn(token, self.all)
+
+    def test_procedural_sound_controls(self):
+        for token in (
+            "AudioContext",
+            "sound on",
+            "sound off",
+            "sound test",
+            "audio.unlock",
+            "audio.setVolume",
+            "createOscillator",
+            "createBufferSource",
+        ):
+            self.assertIn(token, self.all)
+        self.assertNotIn("<audio", self.all.lower())
+        self.assertNotIn(".mp3", self.all.lower())
+        self.assertNotIn(".wav", self.all.lower())
+
+    def test_no_hardware_led_surface(self):
+        for token in ("PWR", "NET LED", "TTY LED", "IO LED", "hardware-led", "led-bank"):
+            self.assertNotIn(token, self.all)
+
+    def test_accessibility_and_mobile(self):
+        for token in (
+            ":focus-visible",
+            "prefers-reduced-motion:reduce",
+            "@media(pointer:coarse)",
+            "@media(max-width:800px)",
+            "calc(61.8svh - 26px)",
+            "height:36svh",
+        ):
+            self.assertIn(token, self.all)
 
 
 if __name__ == "__main__":
