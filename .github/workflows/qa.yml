@@ -1,0 +1,36 @@
+name: QA
+
+on:
+  push:
+    branches:
+      - main
+      - pimp-my-git-2
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qa-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static-site-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+
+      - name: Audit repository
+        run: python scripts/qa.py
