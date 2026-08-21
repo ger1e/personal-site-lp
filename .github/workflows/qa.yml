@@ -37,11 +37,31 @@ jobs:
       - name: Install runtime dependencies
         run: npm install --ignore-scripts --no-audit --no-fund
 
-      - name: Validate Sentry modules
+      - name: Execute Sentry serverless smoke test
         env:
           SENTRY_DSN: ''
           VERCEL_ENV: preview
-        run: node -e "require('./instrument.js'); require('./api/403.js'); require('./api/404.js');"
+        run: |
+          node <<'NODE'
+          const h403 = require('./api/403.js');
+          const h404 = require('./api/404.js');
+          const response = () => ({
+            statusCode: 0,
+            headers: {},
+            setHeader(name, value) { this.headers[name] = value; },
+            end(body) { this.body = body; },
+          });
+          (async () => {
+            const r403 = response();
+            const r404 = response();
+            await h403({ method: 'GET' }, r403);
+            await h404({ method: 'GET' }, r404);
+            if (r403.statusCode !== 403 || r404.statusCode !== 404) process.exit(1);
+          })().catch(error => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
 
       - name: Run unit tests
         run: python -m unittest discover -s tests -p 'test_*.py' -v
