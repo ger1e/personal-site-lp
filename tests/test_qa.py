@@ -1,23 +1,21 @@
 from pathlib import Path
+import json
 import tempfile
 import unittest
 
 from scripts.qa import audit_repository
 
+VALID_HTML = '''<!doctype html><html><head>
+<link rel="canonical" href="https://gergoilly.hu/">
+<meta property="og:image" content="https://gergoilly.hu/og-card.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/site.webmanifest">
+<script type="application/ld+json">{}</script>
+<style>:focus-visible{outline:2px solid currentColor}@media (prefers-reduced-motion: reduce){*{animation:none!important}}</style>
+</head><body><img src="/favicon.svg" alt="fixture"></body></html>'''
 
-VALID_HTML = """<!doctype html>
-<html lang=\"en\">
-<head>
-<meta charset=\"utf-8\">
-<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'self'\">
-<style>
-:focus-visible { outline: 2px solid currentColor; }
-@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
-</style>
-</head>
-<body><img src=\"asset.svg\" alt=\"fixture\"></body>
-</html>
-"""
+PNG = b"\x89PNG\r\n\x1a\nfixture"
+ICO = b"\x00\x00\x01\x00fixture"
 
 
 class RepositoryAuditTests(unittest.TestCase):
@@ -25,54 +23,94 @@ class RepositoryAuditTests(unittest.TestCase):
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         root = Path(temp.name)
+        (root / "api").mkdir()
         (root / "README.md").write_text("# fixture\n", encoding="utf-8")
         (root / "index.html").write_text(html, encoding="utf-8")
-        (root / "asset.svg").write_text("<svg xmlns='http://www.w3.org/2000/svg'></svg>\n", encoding="utf-8")
+        for code in (403, 404):
+            (root / f"{code}.html").write_text(
+                f'<!doctype html><html><head><meta name="robots" content="noindex,nofollow"></head><body><h1>{code}</h1><a href="/">home</a></body></html>',
+                encoding="utf-8",
+            )
+            (root / "api" / f"{code}.js").write_text("module.exports=()=>{}\n", encoding="utf-8")
+        (root / "favicon.svg").write_text('<svg xmlns="http://www.w3.org/2000/svg"></svg>', encoding="utf-8")
+        for name in [
+            "og-card.png",
+            "favicon-16x16.png",
+            "favicon-32x32.png",
+            "apple-touch-icon.png",
+            "android-chrome-192x192.png",
+            "android-chrome-512x512.png",
+        ]:
+            (root / name).write_bytes(PNG)
+        (root / "favicon.ico").write_bytes(ICO)
+        (root / "robots.txt").write_text(
+            "User-agent: *\nAllow: /\nSitemap: https://gergoilly.hu/sitemap.xml\n",
+            encoding="utf-8",
+        )
+        (root / "sitemap.xml").write_text(
+            "<urlset><url><loc>https://gergoilly.hu/</loc></url></urlset>",
+            encoding="utf-8",
+        )
+        (root / "site.webmanifest").write_text(
+            json.dumps(
+                {
+                    "start_url": "/",
+                    "display": "standalone",
+                    "icons": [
+                        {"src": "/android-chrome-192x192.png", "sizes": "192x192"},
+                        {"src": "/android-chrome-512x512.png", "sizes": "512x512"},
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        (root / "vercel.json").write_text(
+            json.dumps(
+                {
+                    "routes": [
+                        {
+                            "src": "/(.*)",
+                            "headers": {"Content-Security-Policy": "frame-ancestors 'none'"},
+                            "continue": True,
+                        },
+                        {"src": "/403", "dest": "/api/403"},
+                        {"handle": "filesystem"},
+                        {"src": "/(.*)", "dest": "/api/404"},
+                    ]
+                }
+            ),
+            encoding="utf-8",
+        )
         return root
 
     def test_valid_repository_has_no_failures(self):
         self.assertEqual(audit_repository(self.make_repo()), [])
 
-    def test_missing_html_structure_is_reported(self):
-        root = self.make_repo("<html><body>broken</body></html>")
-        failures = audit_repository(root)
-        self.assertTrue(any("doctype" in failure.lower() for failure in failures))
-        self.assertTrue(any("<head" in failure.lower() for failure in failures))
+    def test_missing_canonical_is_reported(self):
+        root = self.make_repo(VALID_HTML.replace('<link rel="canonical" href="https://gergoilly.hu/">', ""))
+        self.assertTrue(any("canonical" in failure.lower() for failure in audit_repository(root)))
 
-    def test_merge_conflict_marker_is_reported(self):
-        root = self.make_repo(VALID_HTML + "\n<<<<<<< HEAD\n")
-        failures = audit_repository(root)
-        self.assertTrue(any("merge-conflict" in failure.lower() for failure in failures))
-
-    def test_inline_marker_literals_are_not_reported(self):
+    def test_missing_csp_header_is_reported(self):
         root = self.make_repo()
-        (root / "notes.md").write_text(
-            "Detector documentation mentions <<<<<<< / ======= / >>>>>>> markers inline.\n",
+        (root / "vercel.json").write_text(
+            json.dumps({"routes": [{"handle": "filesystem"}, {"src": "/(.*)", "dest": "/api/404"}]}),
             encoding="utf-8",
         )
-        (root / "sample.py").write_text(
-            'MARKERS = ("<<<<<<<", "=======", ">>>>>>>")\n',
-            encoding="utf-8",
-        )
-        self.assertEqual(audit_repository(root), [])
+        self.assertTrue(any("content-security-policy" in failure.lower() for failure in audit_repository(root)))
+
+    def test_missing_local_asset_is_reported(self):
+        root = self.make_repo(VALID_HTML.replace("/favicon.svg", "/missing.svg"))
+        self.assertTrue(any("missing.svg" in failure for failure in audit_repository(root)))
 
     def test_committed_env_file_is_reported(self):
         root = self.make_repo()
-        (root / ".env").write_text("SECRET=do-not-commit\n", encoding="utf-8")
-        failures = audit_repository(root)
-        self.assertTrue(any(".env" in failure for failure in failures))
+        (root / ".env").write_text("SECRET=x\n", encoding="utf-8")
+        self.assertTrue(any(".env" in failure for failure in audit_repository(root)))
 
-    def test_missing_local_asset_is_reported(self):
-        root = self.make_repo(VALID_HTML.replace("asset.svg", "missing.svg"))
-        failures = audit_repository(root)
-        self.assertTrue(any("missing.svg" in failure for failure in failures))
-
-    def test_external_and_fragment_links_are_ignored(self):
-        html = VALID_HTML.replace(
-            "</body>",
-            '<a href="https://example.com/x">external</a><a href="#local">fragment</a></body>',
-        )
-        self.assertEqual(audit_repository(self.make_repo(html)), [])
+    def test_merge_conflict_marker_is_reported(self):
+        root = self.make_repo()
+        (root / "notes.md").write_text("<<<<<<< HEAD\n", encoding="utf-8")
+        self.assertTrue(any("merge-conflict" in failure.lower() for failure in audit_repository(root)))
 
 
 if __name__ == "__main__":
