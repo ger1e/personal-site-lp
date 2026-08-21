@@ -5,11 +5,15 @@ from __future__ import annotations
 
 from html.parser import HTMLParser
 from pathlib import Path
+import re
 import sys
 from urllib.parse import unquote, urlsplit
 
 
-CONFLICT_MARKERS = ("<<<<<<<", "=======", ">>>>>>>")
+CONFLICT_LINE = re.compile(
+    r"^(?:<<<<<<<(?: .+)?|=======|>>>>>>>(?: .+)?)\s*$",
+    re.MULTILINE,
+)
 TEXT_SUFFIXES = {
     ".css",
     ".html",
@@ -122,7 +126,7 @@ def audit_repository(root: Path) -> list[str]:
             text = path.read_text(encoding="utf-8")
         except (OSError, UnicodeError):
             continue
-        if any(marker in text for marker in CONFLICT_MARKERS):
+        if CONFLICT_LINE.search(text):
             failures.append(f"merge-conflict marker found in {path.relative_to(root)}")
 
     parser = _ReferenceParser()
