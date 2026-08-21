@@ -11,6 +11,7 @@ import sys
 from urllib.parse import unquote, urlsplit
 
 CANONICAL_URL = "https://gergoilly.hu/"
+SECURITY_TXT_URL = "https://gergoilly.hu/.well-known/security.txt"
 CONFLICT_LINE = re.compile(r"^(?:<<<<<<<(?: .+)?|=======|>>>>>>>(?: .+)?)\s*$", re.MULTILINE)
 TEXT_SUFFIXES = {".css", ".html", ".js", ".json", ".md", ".py", ".txt", ".xml", ".yaml", ".yml", ".webmanifest"}
 
@@ -90,7 +91,7 @@ def audit_repository(root: Path) -> list[str]:
     failures: list[str] = []
     index = root / "index.html"
 
-    for name in ["README.md", "index.html", "403.html", "404.html", "robots.txt", "sitemap.xml", "site.webmanifest", "vercel.json", "favicon.svg", "favicon.ico", "og-card.png"]:
+    for name in ["README.md", "index.html", "403.html", "404.html", "robots.txt", "sitemap.xml", "site.webmanifest", "vercel.json", "favicon.svg", "favicon.ico", "og-card.png", ".well-known/security.txt", "security.txt"]:
         if not (root / name).is_file():
             failures.append(f"{name} is missing")
 
@@ -137,6 +138,9 @@ def audit_repository(root: Path) -> list[str]:
                 failures.append("vercel.json is missing catch-all custom 404 routing")
             if not any(isinstance(r, dict) and r.get("dest") == "/api/403" for r in routes):
                 failures.append("vercel.json is missing custom 403 routing")
+            for security_path in ("/.well-known/security.txt", "/security.txt"):
+                if not any(isinstance(r, dict) and r.get("src") == security_path and "text/plain" in json.dumps(r.get("headers", {})) for r in routes):
+                    failures.append(f"vercel.json is missing text/plain headers for {security_path}")
 
     manifest = _parse_json(root / "site.webmanifest", failures) if (root / "site.webmanifest").is_file() else None
     if isinstance(manifest, dict):
@@ -155,6 +159,20 @@ def audit_repository(root: Path) -> list[str]:
         sitemap = (root / "sitemap.xml").read_text(encoding="utf-8")
         if f"<loc>{CANONICAL_URL}</loc>" not in sitemap:
             failures.append("sitemap.xml is missing canonical homepage URL")
+
+    canonical_security = root / ".well-known/security.txt"
+    compatibility_security = root / "security.txt"
+    if canonical_security.is_file():
+        sec = canonical_security.read_text(encoding="utf-8")
+        for field in ("Contact:", "Expires:", "Canonical:", "Policy:"):
+            if not re.search(rf"(?m)^{re.escape(field)}\s+\S+", sec):
+                failures.append(f".well-known/security.txt is missing {field[:-1]}")
+        if f"Canonical: {SECURITY_TXT_URL}" not in sec:
+            failures.append(".well-known/security.txt has incorrect Canonical URL")
+        if "Preferred-Languages: en, hu" not in sec:
+            failures.append(".well-known/security.txt is missing preferred languages")
+        if compatibility_security.is_file() and compatibility_security.read_text(encoding="utf-8") != sec:
+            failures.append("security.txt compatibility copy differs from canonical security.txt")
 
     for code in (403, 404):
         path = root / f"{code}.html"
