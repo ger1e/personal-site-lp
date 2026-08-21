@@ -1,0 +1,61 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "routes": [
+    {
+      "src": "/(.*)",
+      "headers": {
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()",
+        "Strict-Transport-Security": "max-age=31536000",
+        "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data: blob:; frame-src https://open.spotify.com https://*.spotify.com; connect-src 'self' https://open.spotify.com https://*.spotify.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; manifest-src 'self'; upgrade-insecure-requests"
+      },
+      "continue": true
+    },
+    {
+      "src": "/og-card.png",
+      "headers": {
+        "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800"
+      },
+      "continue": true
+    },
+    {
+      "src": "/(favicon\\.ico|favicon\\.svg|favicon-16x16\\.png|favicon-32x32\\.png|apple-touch-icon\\.png|android-chrome-192x192\\.png|android-chrome-512x512\\.png|mstile-150x150\\.png|safari-pinned-tab\\.svg)",
+      "headers": {
+        "Cache-Control": "public, max-age=86400"
+      },
+      "continue": true
+    },
+    {
+      "src": "/(robots\\.txt|sitemap\\.xml|site\\.webmanifest|browserconfig\\.xml)",
+      "headers": {
+        "Cache-Control": "public, max-age=3600"
+      },
+      "continue": true
+    },
+    {
+      "src": "/403",
+      "dest": "/api/403"
+    },
+    {
+      "src": "/403\\.html",
+      "dest": "/api/403"
+    },
+    {
+      "src": "/404",
+      "dest": "/api/404"
+    },
+    {
+      "src": "/404\\.html",
+      "dest": "/api/404"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/404"
+    }
+  ]
+}
