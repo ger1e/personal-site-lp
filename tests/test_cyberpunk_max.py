@@ -5,6 +5,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PAGE = ROOT / "index.html"
 CSS = ROOT / "site.css"
 JS = ROOT / "site.js"
+PORTRAIT = ROOT / "portrait.webp"
 
 class CanonicalBlueSiteContract(unittest.TestCase):
     @classmethod
@@ -35,7 +36,9 @@ class CanonicalBlueSiteContract(unittest.TestCase):
             self.assertNotIn(token, self.all)
 
     def test_portrait_and_links(self):
-        self.assertIn("1zgxo_yoYnLX6FGoh8CvR7uX9H62ZME5y", self.html)
+        self.assertIn('src="/portrait.webp"', self.html)
+        self.assertTrue(PORTRAIT.exists())
+        self.assertGreater(PORTRAIT.stat().st_size, 50_000)
         self.assertIn('href="mailto:mail@gergoilly.hu"', self.html)
         self.assertIn('aria-label="Email Gergő Illy"', self.html)
         self.assertIn('href="https://linkedin.com/in/gergoilly"', self.html)
