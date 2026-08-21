@@ -23,6 +23,12 @@ class SentryIntegrationTests(unittest.TestCase):
         self.assertIn("0.1", text)
         self.assertIn("VERCEL_GIT_COMMIT_SHA", text)
 
+    def test_ci_can_disable_sentry_delivery(self):
+        instrument = (ROOT / "instrument.js").read_text(encoding="utf-8")
+        workflow = (ROOT / ".github" / "workflows" / "qa.yml").read_text(encoding="utf-8")
+        self.assertIn('enabled: process.env.SENTRY_ENABLED !== "false"', instrument)
+        self.assertIn("SENTRY_ENABLED: 'false'", workflow)
+
     def test_error_routes_load_sentry_first(self):
         for code in (403, 404):
             text = (ROOT / "api" / f"{code}.js").read_text(encoding="utf-8")
