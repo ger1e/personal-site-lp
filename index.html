@@ -11,7 +11,24 @@
 <meta property="og:title" content="ム乇 尺 1 乇 // ger1e">
 <meta property="og:description" content="Behavior. Evidence. Signal.">
 <meta name="twitter:card" content="summary_large_image">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline' https://js.sentry-cdn.com https://browser.sentry-cdn.com; img-src 'self' data:; connect-src 'self' https://o4511932881502208.ingest.de.sentry.io; object-src 'none'; base-uri 'none'; form-action 'none'">
+<script>
+window.sentryOnLoad=function(){
+  Sentry.init({
+    dsn:"https://d21115d9c71acb4ba224be1fe334460f@o4511932881502208.ingest.de.sentry.io/4511947440259152",
+    environment:location.hostname==="gergoilly.hu"?"production":"preview",
+    tracesSampleRate:location.hostname==="gergoilly.hu"?0.1:1.0,
+    sendDefaultPii:false,
+    replaysSessionSampleRate:0,
+    replaysOnErrorSampleRate:0,
+    beforeSend(event){
+      if(event.request){delete event.request.cookies;delete event.request.headers;delete event.request.data;}
+      return event;
+    }
+  });
+};
+</script>
+<script src="https://js.sentry-cdn.com/d21115d9c71acb4ba224be1fe334460f.min.js" crossorigin="anonymous"></script>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2302050a'/%3E%3Cg fill='none' stroke='%2357e5ff' stroke-width='2'%3E%3Ccircle cx='32' cy='32' r='22'/%3E%3Ccircle cx='32' cy='32' r='14' opacity='.7'/%3E%3Ccircle cx='32' cy='32' r='6' opacity='.55'/%3E%3Cpath d='M32 32L51 18'/%3E%3C/g%3E%3Ccircle cx='47' cy='21' r='3' fill='%2366ff9b'/%3E%3C/svg%3E">
 <title>ム乇 尺 1 乇 // ger1e</title>
 <style>
