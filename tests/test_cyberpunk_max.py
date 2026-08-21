@@ -1,4 +1,5 @@
 from pathlib import Path
+import struct
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -34,9 +35,14 @@ class CyberpunkMaxContract(unittest.TestCase):
 
     def test_hero_asset(self):
         self.assertIn('src="assets/rotund-operator-4k.avif"', self.html)
+        self.assertIn('width="3072" height="4096"', self.html)
         raw = ASSET.read_bytes()
-        self.assertGreater(len(raw), 100_000)
         self.assertEqual(raw[4:8], b"ftyp")
+        ispe = raw.find(b"ispe")
+        self.assertGreaterEqual(ispe, 0, "AVIF is missing spatial-extents metadata")
+        self.assertGreaterEqual(len(raw), ispe + 16)
+        width, height = struct.unpack(">II", raw[ispe + 8:ispe + 16])
+        self.assertEqual((width, height), (3072, 4096))
 
     def test_accessibility_and_no_bootstrap(self):
         for token in (":focus-visible", "prefers-reduced-motion:reduce", "@media(pointer:coarse)"):
