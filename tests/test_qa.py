@@ -16,6 +16,12 @@ VALID_HTML = '''<!doctype html><html><head>
 
 PNG = b"\x89PNG\r\n\x1a\nfixture"
 ICO = b"\x00\x00\x01\x00fixture"
+SECURITY_TXT = """Contact: https://github.com/ger1e
+Expires: 2027-08-21T00:00:00Z
+Preferred-Languages: en, hu
+Canonical: https://gergoilly.hu/.well-known/security.txt
+Policy: https://github.com/ger1e/personal-site-lp/security/policy
+"""
 
 
 class RepositoryAuditTests(unittest.TestCase):
@@ -24,6 +30,7 @@ class RepositoryAuditTests(unittest.TestCase):
         self.addCleanup(temp.cleanup)
         root = Path(temp.name)
         (root / "api").mkdir()
+        (root / ".well-known").mkdir()
         (root / "README.md").write_text("# fixture\n", encoding="utf-8")
         (root / "index.html").write_text(html, encoding="utf-8")
         for code in (403, 404):
@@ -64,6 +71,8 @@ class RepositoryAuditTests(unittest.TestCase):
             ),
             encoding="utf-8",
         )
+        (root / ".well-known" / "security.txt").write_text(SECURITY_TXT, encoding="utf-8")
+        (root / "security.txt").write_text(SECURITY_TXT, encoding="utf-8")
         (root / "vercel.json").write_text(
             json.dumps(
                 {
@@ -73,6 +82,8 @@ class RepositoryAuditTests(unittest.TestCase):
                             "headers": {"Content-Security-Policy": "frame-ancestors 'none'"},
                             "continue": True,
                         },
+                        {"src": "/.well-known/security.txt", "headers": {"Content-Type": "text/plain; charset=utf-8"}, "continue": True},
+                        {"src": "/security.txt", "headers": {"Content-Type": "text/plain; charset=utf-8"}, "continue": True},
                         {"src": "/403", "dest": "/api/403"},
                         {"handle": "filesystem"},
                         {"src": "/(.*)", "dest": "/api/404"},
@@ -111,6 +122,16 @@ class RepositoryAuditTests(unittest.TestCase):
         root = self.make_repo()
         (root / "notes.md").write_text("<<<<<<< HEAD\n", encoding="utf-8")
         self.assertTrue(any("merge-conflict" in failure.lower() for failure in audit_repository(root)))
+
+    def test_security_txt_canonical_mismatch_is_reported(self):
+        root = self.make_repo()
+        bad = SECURITY_TXT.replace(
+            "Canonical: https://gergoilly.hu/.well-known/security.txt",
+            "Canonical: https://example.com/security.txt",
+        )
+        (root / ".well-known" / "security.txt").write_text(bad, encoding="utf-8")
+        (root / "security.txt").write_text(bad, encoding="utf-8")
+        self.assertTrue(any("security.txt has incorrect canonical" in failure.lower() for failure in audit_repository(root)))
 
 
 if __name__ == "__main__":
