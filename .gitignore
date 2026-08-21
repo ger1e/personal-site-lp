@@ -1,0 +1,22 @@
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Python QA caches
+__pycache__/
+*.py[cod]
+
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+
+# Local runtime noise
+*.log
+.tmp/
+tmp/
