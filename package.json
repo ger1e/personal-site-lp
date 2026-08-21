@@ -5,7 +5,7 @@
   "description": "ger1e personal landing page and Vercel serverless error routes",
   "license": "UNLICENSED",
   "engines": {
-    "node": ">=20"
+    "node": "24.x"
   },
   "dependencies": {
     "@sentry/node": "10.70.0"
