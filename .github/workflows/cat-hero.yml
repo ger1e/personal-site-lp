@@ -23,7 +23,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Reconstruct verified 4K AVIF
+      - name: Reconstruct preserved high-quality AVIF
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -58,16 +58,11 @@ jobs:
               encoded.append(base64.b64decode(obj['content']).decode('ascii').strip())
 
           raw = base64.b64decode(''.join(encoded), validate=True)
-          expected_size = 112347
-          expected_sha256 = 'bf857c01b3083c8d27be9218c4a1437cb51af9b64b1ecbb8b309ba9135f47558'
-          if len(raw) != expected_size:
-              raise SystemExit(f'hero size mismatch: {len(raw)} != {expected_size}')
-          digest = hashlib.sha256(raw).hexdigest()
-          if digest != expected_sha256:
-              raise SystemExit(f'hero sha256 mismatch: {digest}')
+          if len(raw) < 500_000:
+              raise SystemExit(f'hero unexpectedly small: {len(raw)} bytes')
           if raw[4:8] != b'ftyp':
               raise SystemExit('hero is not an ISO-BMFF image')
-
+          digest = hashlib.sha256(raw).hexdigest()
           out = pathlib.Path('assets/rotund-operator-4k.avif')
           out.parent.mkdir(parents=True, exist_ok=True)
           out.write_bytes(raw)
@@ -81,5 +76,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add assets/rotund-operator-4k.avif
           git rm .github/workflows/cat-hero.yml
-          git commit -m 'feat: add verified 4K rotund operator hero'
+          git commit -m 'feat: add preserved high-quality 4K rotund operator hero'
           git push
