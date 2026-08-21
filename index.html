@@ -107,6 +107,15 @@ a{color:inherit;text-decoration:none}
 @media(max-width:940px){.hero-card{min-height:auto;padding-bottom:390px}.cat-card{width:min(360px,78vw);min-width:0;right:22px;bottom:24px}.spotify{width:min(540px,100%)}}
 @media(max-width:620px){.shell{width:calc(100% - 16px)}.navright a:first-child{display:none}.hero{padding-top:20px}.hero-card{padding:26px 20px 370px}.name{font-size:clamp(41px,13vw,62px)}.role{font-size:24px}.cat-card{left:20px;right:20px;width:auto;bottom:22px}.microstate{display:none}}
 @media(prefers-reduced-motion:reduce){#matrix,.gridfx,.beam,.glitchline,.boot{display:none!important}*,*::before,*::after{animation:none!important;scroll-behavior:auto!important}.hero-card,.cat-card{transform:none!important}}
+
+/* cat-hero-max:start */
+/* Managed responsive override: promote the existing embedded cat without touching its image payload. */
+.cat-card{width:min(470px,39vw);min-width:320px;aspect-ratio:4/5;right:clamp(18px,3.4vw,42px);bottom:clamp(18px,3.4vw,36px);box-shadow:0 24px 72px rgba(0,0,0,.46),0 0 62px rgba(89,255,155,.09)}
+.content{max-width:675px}
+.spotify{width:min(490px,100%)}
+@media(max-width:1040px){.hero-card{padding-bottom:480px}.cat-card{width:min(440px,84vw);min-width:0}}
+@media(max-width:620px){.hero-card{padding-bottom:440px}.cat-card{left:16px;right:16px;width:auto;aspect-ratio:4/5}}
+/* cat-hero-max:end */
 </style>
 </head>
 <body>
