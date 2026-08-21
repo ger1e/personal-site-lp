@@ -28,6 +28,22 @@
       "continue": true
     },
     {
+      "src": "/.well-known/security.txt",
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "public, max-age=3600"
+      },
+      "continue": true
+    },
+    {
+      "src": "/security.txt",
+      "headers": {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "public, max-age=3600"
+      },
+      "continue": true
+    },
+    {
       "src": "/(robots\\.txt|sitemap\\.xml|site\\.webmanifest|browserconfig\\.xml)",
       "headers": {
         "Cache-Control": "public, max-age=3600"
