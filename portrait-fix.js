@@ -1,0 +1,1 @@
+(()=>{const img=document.querySelector('#portrait img');if(img?.dataset.portrait)img.src=img.dataset.portrait})();
