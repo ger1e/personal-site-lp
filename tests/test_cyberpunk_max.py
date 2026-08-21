@@ -15,8 +15,10 @@ class CanonicalBlueSiteContract(unittest.TestCase):
         cls.all = "\n".join((cls.html, cls.css, cls.js))
 
     def test_identity_and_visual_contract(self):
-        for token in ("GERGŐ ILLY","CYBERSECURITY PROFESSIONAL","Cybersecurity Consultant / Cyber Threat Hunter","Budapest, Hungary","#0F62FE","#78A9FF","#02060D","visitor@gergoilly.hu: ~ — zsh"):
+        for token in ("GERGŐ ILLY","CYBERSECURITY PROFESSIONAL","Cybersecurity Consultant / Cyber Threat Hunter","Budapest, Hungary","visitor@gergoilly.hu: ~ — zsh"):
             self.assertIn(token, self.all)
+        for color in ("#0f62fe","#78a9ff","#02060d"):
+            self.assertIn(color, self.all.lower())
         self.assertNotIn("CIGANY.EXE", self.all)
         self.assertNotIn("rotund-operator", self.all)
         self.assertNotIn("spotify", self.all.lower())
