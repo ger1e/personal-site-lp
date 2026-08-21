@@ -29,6 +29,10 @@ class SentryIntegrationTests(unittest.TestCase):
         self.assertIn('enabled: process.env.SENTRY_ENABLED !== "false"', instrument)
         self.assertIn("SENTRY_ENABLED: 'false'", workflow)
 
+    def test_ci_matches_vercel_node_major(self):
+        workflow = (ROOT / ".github" / "workflows" / "qa.yml").read_text(encoding="utf-8")
+        self.assertIn("node-version: '24'", workflow)
+
     def test_error_routes_load_sentry_first(self):
         for code in (403, 404):
             text = (ROOT / "api" / f"{code}.js").read_text(encoding="utf-8")
