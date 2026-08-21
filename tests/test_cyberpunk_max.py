@@ -34,13 +34,10 @@ class CanonicalBlueSiteContract(unittest.TestCase):
         self.assertIn('href="https://linkedin.com/in/gergoilly"', self.html)
         self.assertIn('target="_blank" rel="noopener noreferrer"', self.html)
 
-    def test_terminal_and_matrix_behavior(self):
+    def test_terminal_rain_and_input_behavior(self):
         for token in (
             'id="matrix-bg"',
             'id="matrix-fg"',
-            "matrix [normal|dense|off]",
-            "setInterval(glitchPortrait,40000)",
-            "setInterval(glitchWord,27000)",
             "Europe/Budapest",
             "grid-template-rows:30px minmax(0,1fr) auto",
             "overscroll-behavior:contain",
@@ -50,6 +47,45 @@ class CanonicalBlueSiteContract(unittest.TestCase):
             "Tab",
         ):
             self.assertIn(token, self.html)
+        self.assertNotIn("matrix [normal|dense|off]", self.html)
+        self.assertNotIn("base==='matrix'", self.html)
+        self.assertNotIn("applyMatrix()", self.html)
+
+    def test_glitch_max_controller(self):
+        for token in (
+            "new EventTarget()",
+            "glitch:micro",
+            "glitch:medium",
+            "glitch:catastrophic",
+            "glitch:hard",
+            "scheduleCatastrophic",
+            "scheduleHardFault",
+            "fault-layer",
+            "syncFault",
+            "hardFault",
+            "phosphorHit",
+        ):
+            self.assertIn(token, self.html)
+
+    def test_procedural_sound_controls(self):
+        for token in (
+            "AudioContext",
+            "sound on",
+            "sound off",
+            "sound test",
+            "audio.unlock",
+            "audio.setVolume",
+            "createOscillator",
+            "createBufferSource",
+        ):
+            self.assertIn(token, self.html)
+        self.assertNotIn("<audio", self.html.lower())
+        self.assertNotIn(".mp3", self.html.lower())
+        self.assertNotIn(".wav", self.html.lower())
+
+    def test_no_hardware_led_surface(self):
+        for token in ("PWR", "NET LED", "TTY LED", "IO LED", "hardware-led", "led-bank"):
+            self.assertNotIn(token, self.html)
 
     def test_accessibility_and_mobile(self):
         for token in (
