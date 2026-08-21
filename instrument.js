@@ -5,6 +5,7 @@ const isProduction = process.env.VERCEL_ENV === "production" || process.env.NODE
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN || DSN,
+  enabled: process.env.SENTRY_ENABLED !== "false",
   environment: process.env.VERCEL_ENV || process.env.NODE_ENV || "development",
   release: process.env.VERCEL_GIT_COMMIT_SHA || undefined,
   enableLogs: true,
