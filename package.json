@@ -1,0 +1,13 @@
+{
+  "name": "personal-site-lp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ger1e personal landing page and Vercel serverless error routes",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@sentry/node": "10.70.0"
+  }
+}
