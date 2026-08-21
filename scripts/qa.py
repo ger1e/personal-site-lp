@@ -12,7 +12,11 @@ from urllib.parse import unquote, urlsplit
 
 CANONICAL_URL = "https://gergoilly.hu/"
 SECURITY_TXT_URL = "https://gergoilly.hu/.well-known/security.txt"
+SENTRY_INGEST = "https://o4511932881502208.ingest.de.sentry.io"
+SENTRY_CDNS = ("https://js.sentry-cdn.com", "https://browser.sentry-cdn.com")
 CONFLICT_LINE = re.compile(r"^(?:<<<<<<<(?: .+)?|=======|>>>>>>>(?: .+)?)\s*$", re.MULTILINE)
+SENTRY_AUTH_TOKEN = re.compile(r"\bsntry[su]_[A-Za-z0-9_-]{12,}\b")
+PRIVATE_KEY_HEADER = re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----")
 TEXT_SUFFIXES = {".css", ".html", ".js", ".json", ".md", ".py", ".txt", ".xml", ".yaml", ".yml", ".webmanifest"}
 
 
@@ -86,12 +90,110 @@ def _audit_html_references(root: Path, source: Path, failures: list[str]) -> Non
             failures.append(f"missing local asset referenced by {source.name} {attribute}: {value}")
 
 
+def _csp_has_broad_wildcard(csp: str) -> bool:
+    for directive in csp.split(";"):
+        parts = directive.strip().split()
+        if parts and parts[0].casefold() in {"default-src", "script-src", "connect-src"} and "*" in parts[1:]:
+            return True
+    return False
+
+
+def _audit_sentry_contract(root: Path, html: str, failures: list[str]) -> None:
+    compact_html = re.sub(r"\s+", "", html)
+    browser_requirements = {
+        "sendDefaultPii:false": "browser Sentry must disable default PII",
+        "replaysSessionSampleRate:0": "browser Sentry session replay must be disabled",
+        "replaysOnErrorSampleRate:0": "browser Sentry error replay must be disabled",
+        "deleteevent.request.cookies": "browser Sentry must strip request cookies",
+        "deleteevent.request.headers": "browser Sentry must strip request headers",
+        "deleteevent.request.data": "browser Sentry must strip request bodies",
+    }
+    for token, message in browser_requirements.items():
+        if token not in compact_html:
+            failures.append(message)
+
+    meta_match = re.search(
+        r'<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]+)"',
+        html,
+        re.IGNORECASE,
+    )
+    if not meta_match:
+        failures.append("index.html is missing page-level Content-Security-Policy")
+    else:
+        page_csp = meta_match.group(1)
+        if SENTRY_INGEST not in page_csp or any(origin not in page_csp for origin in SENTRY_CDNS):
+            failures.append("index.html CSP is missing required Sentry allowlist origins")
+        if _csp_has_broad_wildcard(page_csp):
+            failures.append("index.html CSP contains a broad wildcard source")
+
+    instrument = root / "instrument.js"
+    if instrument.is_file():
+        text = instrument.read_text(encoding="utf-8")
+        compact = re.sub(r"\s+", "", text)
+        server_requirements = {
+            "release:process.env.VERCEL_GIT_COMMIT_SHA||undefined": "Node Sentry is missing Vercel Git release tagging",
+            "enableLogs:true": "Node Sentry structured logs are disabled",
+            "tracesSampleRate:isProduction?0.1:1.0": "Node Sentry production trace sampling must be 10%",
+            "sendDefaultPii:false": "Node Sentry must disable default PII",
+            "userInfo:false": "Node Sentry must disable user-info collection",
+            "httpBodies:[]": "Node Sentry must disable HTTP-body collection",
+        }
+        for token, message in server_requirements.items():
+            if token not in compact:
+                failures.append(message)
+
+
+def _audit_dependency_lock(root: Path, failures: list[str]) -> None:
+    package_path = root / "package.json"
+    lock_path = root / "package-lock.json"
+    if not package_path.is_file():
+        return
+    package = _parse_json(package_path, failures)
+    if not lock_path.is_file():
+        failures.append("package-lock.json is missing")
+        return
+    lock = _parse_json(lock_path, failures)
+    if not isinstance(package, dict) or not isinstance(lock, dict):
+        return
+    if lock.get("lockfileVersion") != 3:
+        failures.append("package-lock.json must use lockfileVersion 3")
+    dependencies = package.get("dependencies", {})
+    expected = dependencies.get("@sentry/node") if isinstance(dependencies, dict) else None
+    if not isinstance(expected, str) or not re.fullmatch(r"\d+\.\d+\.\d+", expected):
+        failures.append("@sentry/node must be pinned to an exact semantic version")
+        return
+    packages = lock.get("packages", {})
+    locked = packages.get("node_modules/@sentry/node", {}) if isinstance(packages, dict) else {}
+    actual = locked.get("version") if isinstance(locked, dict) else None
+    if actual != expected:
+        failures.append(f"Sentry lock version mismatch: package.json={expected}, package-lock.json={actual}")
+
+
+def _audit_secret_material(root: Path, failures: list[str]) -> None:
+    for path in _iter_text_files(root):
+        relative = path.relative_to(root)
+        if relative.parts and relative.parts[0] == "tests":
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError):
+            continue
+        if SENTRY_AUTH_TOKEN.search(text):
+            failures.append(f"Sentry auth token material found in {relative}")
+        if PRIVATE_KEY_HEADER.search(text):
+            failures.append(f"private key material found in {relative}")
+
+
 def audit_repository(root: Path) -> list[str]:
     root = root.resolve()
     failures: list[str] = []
     index = root / "index.html"
 
-    for name in ["README.md", "index.html", "403.html", "404.html", "robots.txt", "sitemap.xml", "site.webmanifest", "vercel.json", "favicon.svg", "favicon.ico", "og-card.png", ".well-known/security.txt", "security.txt"]:
+    for name in [
+        "README.md", "index.html", "403.html", "404.html", "robots.txt", "sitemap.xml",
+        "site.webmanifest", "vercel.json", "favicon.svg", "favicon.ico", "og-card.png",
+        ".well-known/security.txt", "security.txt", "package.json", "package-lock.json", "instrument.js",
+    ]:
         if not (root / name).is_file():
             failures.append(f"{name} is missing")
 
@@ -123,6 +225,9 @@ def audit_repository(root: Path) -> list[str]:
         if token not in lowered:
             failures.append(f"index.html is missing {description}")
 
+    _audit_sentry_contract(root, html, failures)
+    _audit_dependency_lock(root, failures)
+
     vercel = _parse_json(root / "vercel.json", failures) if (root / "vercel.json").is_file() else None
     if isinstance(vercel, dict):
         routes = vercel.get("routes")
@@ -132,6 +237,20 @@ def audit_repository(root: Path) -> list[str]:
             serialized = json.dumps(routes)
             if "Content-Security-Policy" not in serialized or "frame-ancestors 'none'" not in serialized:
                 failures.append("vercel.json is missing hardened Content-Security-Policy headers")
+            csp_values = [
+                headers.get("Content-Security-Policy")
+                for route in routes if isinstance(route, dict)
+                for headers in [route.get("headers", {})]
+                if isinstance(headers, dict) and isinstance(headers.get("Content-Security-Policy"), str)
+            ]
+            if not csp_values:
+                failures.append("vercel.json is missing Content-Security-Policy")
+            else:
+                csp = csp_values[0]
+                if SENTRY_INGEST not in csp or any(origin not in csp for origin in SENTRY_CDNS):
+                    failures.append("vercel.json Sentry CSP allowlist is incomplete")
+                if _csp_has_broad_wildcard(csp):
+                    failures.append("vercel.json CSP contains a broad wildcard source")
             if not any(isinstance(r, dict) and r.get("handle") == "filesystem" for r in routes):
                 failures.append("vercel.json is missing filesystem routing guard")
             if not any(isinstance(r, dict) and r.get("dest") == "/api/404" and r.get("src") == "/(.*)" for r in routes):
@@ -202,6 +321,8 @@ def audit_repository(root: Path) -> list[str]:
             continue
         if CONFLICT_LINE.search(text):
             failures.append(f"merge-conflict marker found in {path.relative_to(root)}")
+
+    _audit_secret_material(root, failures)
 
     for source in [index, root / "403.html", root / "404.html"]:
         if source.is_file():
