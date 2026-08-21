@@ -3,12 +3,17 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 PAGE = ROOT / "index.html"
+CSS = ROOT / "site.css"
+JS = ROOT / "site.js"
 
 
 class CanonicalBlueSiteContract(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.html = PAGE.read_text(encoding="utf-8")
+        cls.css = CSS.read_text(encoding="utf-8")
+        cls.js = JS.read_text(encoding="utf-8")
+        cls.all = "\n".join((cls.html, cls.css, cls.js))
 
     def test_identity_and_visual_contract(self):
         for token in (
@@ -21,11 +26,11 @@ class CanonicalBlueSiteContract(unittest.TestCase):
             "#02060D",
             "visitor@gergoilly.hu: ~ — zsh",
         ):
-            self.assertIn(token, self.html)
-        self.assertNotIn("CIGANY.EXE", self.html)
-        self.assertNotIn("rotund-operator", self.html)
-        self.assertNotIn("sound-link", self.html)
-        self.assertNotIn("spotify", self.html.lower())
+            self.assertIn(token, self.all)
+        self.assertNotIn("CIGANY.EXE", self.all)
+        self.assertNotIn("rotund-operator", self.all)
+        self.assertNotIn("sound-link", self.all)
+        self.assertNotIn("spotify", self.all.lower())
 
     def test_portrait_and_links(self):
         self.assertIn("1zgxo_yoYnLX6FGoh8CvR7uX9H62ZME5y", self.html)
@@ -46,10 +51,10 @@ class CanonicalBlueSiteContract(unittest.TestCase):
             "ArrowDown",
             "Tab",
         ):
-            self.assertIn(token, self.html)
-        self.assertNotIn("matrix [normal|dense|off]", self.html)
-        self.assertNotIn("base==='matrix'", self.html)
-        self.assertNotIn("applyMatrix()", self.html)
+            self.assertIn(token, self.all)
+        self.assertNotIn("matrix [normal|dense|off]", self.all)
+        self.assertNotIn("base==='matrix'", self.all)
+        self.assertNotIn("applyMatrix()", self.all)
 
     def test_glitch_max_controller(self):
         for token in (
@@ -65,7 +70,7 @@ class CanonicalBlueSiteContract(unittest.TestCase):
             "hardFault",
             "phosphorHit",
         ):
-            self.assertIn(token, self.html)
+            self.assertIn(token, self.all)
 
     def test_procedural_sound_controls(self):
         for token in (
@@ -78,14 +83,14 @@ class CanonicalBlueSiteContract(unittest.TestCase):
             "createOscillator",
             "createBufferSource",
         ):
-            self.assertIn(token, self.html)
-        self.assertNotIn("<audio", self.html.lower())
-        self.assertNotIn(".mp3", self.html.lower())
-        self.assertNotIn(".wav", self.html.lower())
+            self.assertIn(token, self.all)
+        self.assertNotIn("<audio", self.all.lower())
+        self.assertNotIn(".mp3", self.all.lower())
+        self.assertNotIn(".wav", self.all.lower())
 
     def test_no_hardware_led_surface(self):
         for token in ("PWR", "NET LED", "TTY LED", "IO LED", "hardware-led", "led-bank"):
-            self.assertNotIn(token, self.html)
+            self.assertNotIn(token, self.all)
 
     def test_accessibility_and_mobile(self):
         for token in (
@@ -96,7 +101,7 @@ class CanonicalBlueSiteContract(unittest.TestCase):
             "calc(61.8svh - 26px)",
             "height:36svh",
         ):
-            self.assertIn(token, self.html)
+            self.assertIn(token, self.all)
 
 
 if __name__ == "__main__":
