@@ -1,0 +1,6 @@
+/* ger1e cyber cursor system — desktop/fine pointers only */
+@media (hover:hover) and (pointer:fine) {
+  html, body, main, section, figure, nav, .hero-card, .cat-card, .spotify { cursor: url('/cursor-reticle.svg') 16 16, crosshair; }
+  a, button, .btn, [role='button'], summary, label { cursor: url('/cursor-lock.svg') 16 16, pointer; }
+  input, textarea, [contenteditable='true'] { cursor: url('/cursor-text.svg') 16 16, text; }
+}
