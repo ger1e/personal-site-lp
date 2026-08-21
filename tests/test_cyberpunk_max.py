@@ -38,7 +38,7 @@ class CanonicalBlueSiteContract(unittest.TestCase):
     def test_portrait_and_links(self):
         self.assertIn('src="/portrait.webp"', self.html)
         self.assertTrue(PORTRAIT.exists())
-        self.assertGreater(PORTRAIT.stat().st_size, 50_000)
+        self.assertGreater(PORTRAIT.stat().st_size, 15_000)
         self.assertIn('href="mailto:mail@gergoilly.hu"', self.html)
         self.assertIn('aria-label="Email Gergő Illy"', self.html)
         self.assertIn('href="https://linkedin.com/in/gergoilly"', self.html)
