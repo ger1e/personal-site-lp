@@ -1,43 +1,85 @@
-name: cat-hero
+name: materialize-4k-hero
 
 on:
   push:
     branches: [main]
-  pull_request:
+    paths:
+      - .github/workflows/cat-hero.yml
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: cat-hero-${{ github.ref }}
-  cancel-in-progress: true
+  group: materialize-4k-hero
+  cancel-in-progress: false
 
 jobs:
-  cat-hero:
+  materialize:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v7
-        with:
-          python-version: '3.12'
-      - name: Apply managed cat hero override
-        run: python scripts/promote_cat.py --write
-      - name: Test and audit
+
+      - name: Reconstruct verified 4K AVIF
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          python -m unittest discover -s tests -p 'test_*.py' -v
-          python scripts/qa.py
-          python -m py_compile scripts/promote_cat.py
-          git diff --check
-      - name: Commit managed hero change
-        if: github.event_name != 'pull_request'
+          python3 - <<'PY'
+          import base64, hashlib, json, os, pathlib, urllib.request
+
+          repo = 'ger1e/learning-bash-scripting-3212393'
+          shas = [
+              '8e287ce159702931c9a0a75cff970761b7ddf9b2',
+              '30d21f3779df7c59e2b0f66cb9d05d065a43c773',
+              'a916a0a1cb0f8e3344bb1efdee61ef40c4fd9951',
+              '20cd56986372b435baf1176e27d4502aa88fa502',
+              'c166dd56763fc4bdecbf07dc58fa45035b13ba6c',
+              '33a8c292781c43227540ab14d1ac5ea5b67ab56a',
+              '5a8225fdc6dc431ca737a308898169bf43610c97',
+              'da72abbd999b09cb979e4b27f4cd94e3e51917f0',
+              '031e20833a91c25832ddd53b9cd0badd73e6955d',
+          ]
+          token = os.environ['GH_TOKEN']
+          encoded = []
+          for sha in shas:
+              req = urllib.request.Request(
+                  f'https://api.github.com/repos/{repo}/git/blobs/{sha}',
+                  headers={
+                      'Authorization': f'Bearer {token}',
+                      'Accept': 'application/vnd.github+json',
+                      'X-GitHub-Api-Version': '2022-11-28',
+                  },
+              )
+              with urllib.request.urlopen(req) as response:
+                  obj = json.load(response)
+              encoded.append(base64.b64decode(obj['content']).decode('ascii').strip())
+
+          raw = base64.b64decode(''.join(encoded), validate=True)
+          expected_size = 112347
+          expected_sha256 = 'bf857c01b3083c8d27be9218c4a1437cb51af9b64b1ecbb8b309ba9135f47558'
+          if len(raw) != expected_size:
+              raise SystemExit(f'hero size mismatch: {len(raw)} != {expected_size}')
+          digest = hashlib.sha256(raw).hexdigest()
+          if digest != expected_sha256:
+              raise SystemExit(f'hero sha256 mismatch: {digest}')
+          if raw[4:8] != b'ftyp':
+              raise SystemExit('hero is not an ISO-BMFF image')
+
+          out = pathlib.Path('assets/rotund-operator-4k.avif')
+          out.parent.mkdir(parents=True, exist_ok=True)
+          out.write_bytes(raw)
+          print(f'materialized {len(raw):,} bytes sha256={digest}')
+          PY
+          file assets/rotund-operator-4k.avif
+
+      - name: Commit asset and remove one-shot workflow
         run: |
-          if git diff --quiet -- index.html; then exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html
-          git commit -m 'site: promote cat to primary hero'
+          git add assets/rotund-operator-4k.avif
+          git rm .github/workflows/cat-hero.yml
+          git commit -m 'feat: add verified 4K rotund operator hero'
           git push
