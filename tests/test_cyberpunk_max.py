@@ -5,6 +5,8 @@ ROOT = Path(__file__).resolve().parents[1]
 PAGE = ROOT / "index.html"
 CSS = ROOT / "site.css"
 JS = ROOT / "site.js"
+PORTRAIT_FIX = ROOT / "portrait-fix.js"
+PORTRAIT_CHUNKS = [ROOT / "portrait" / f"{i}.b64" for i in range(6)]
 
 class CanonicalBlueSiteContract(unittest.TestCase):
     @classmethod
@@ -12,7 +14,8 @@ class CanonicalBlueSiteContract(unittest.TestCase):
         cls.html = PAGE.read_text(encoding="utf-8")
         cls.css = CSS.read_text(encoding="utf-8")
         cls.js = JS.read_text(encoding="utf-8")
-        cls.all = "\n".join((cls.html, cls.css, cls.js))
+        cls.portrait_fix = PORTRAIT_FIX.read_text(encoding="utf-8")
+        cls.all = "\n".join((cls.html, cls.css, cls.js, cls.portrait_fix))
 
     def test_identity_and_visual_contract(self):
         for token in ("GERGŐ ILLY","CYBERSECURITY PROFESSIONAL","Cybersecurity Consultant / Cyber Threat Hunter","Budapest, Hungary","visitor@gergoilly.hu: ~ — zsh"):
@@ -35,13 +38,19 @@ class CanonicalBlueSiteContract(unittest.TestCase):
             self.assertNotIn(token, self.all)
 
     def test_portrait_and_links(self):
-        self.assertIn("1zgxo_yoYnLX6FGoh8CvR7uX9H62ZME5y", self.html)
+        self.assertIn('src="data:image/gif;base64,', self.html)
+        self.assertIn('src="/portrait-fix.js"', self.html)
+        self.assertTrue(all(p.exists() for p in PORTRAIT_CHUNKS))
+        total = sum(len(p.read_text(encoding="utf-8").strip()) for p in PORTRAIT_CHUNKS)
+        self.assertGreater(total, 25_000)
+        self.assertIn("data:image/webp;base64,", self.portrait_fix)
+        self.assertIn("Array.from({length:6}", self.portrait_fix)
         self.assertIn('href="mailto:mail@gergoilly.hu"', self.html)
         self.assertIn('aria-label="Email Gergő Illy"', self.html)
         self.assertIn('href="https://linkedin.com/in/gergoilly"', self.html)
 
     def test_terminal_rain_and_input_behavior(self):
-        for token in ('id="matrix-bg"','id="matrix-fg"',"Europe/Budapest","grid-template-rows:30px minmax(0,1fr) auto","overscroll-behavior:contain","history","ArrowUp","ArrowDown","Tab"):
+        for token in ('id="matrix-bg"','id="matrix-fg"',"Europe/Budapest","grid-template-rows:30px minmax(0,1fr) auto","overscroll-behavior:contain","history","ArrowUp","ArrowDown","Tab","speed:13.5","speed:23.5"):
             self.assertIn(token, self.all)
         self.assertNotIn("matrix [normal|dense|off]", self.all)
         self.assertNotIn("base==='matrix'", self.all)
@@ -51,7 +60,7 @@ class CanonicalBlueSiteContract(unittest.TestCase):
             self.assertIn(token, self.all)
 
     def test_procedural_sound_controls(self):
-        for token in ("AudioContext","sound on","sound off","sound test","sound status","audio.unlock","createOscillator","createBufferSource"):
+        for token in ("AudioContext","sound on","sound off","sound test","sound status","audio.unlock","createOscillator","createBufferSource","ctx.resume"):
             self.assertIn(token, self.all)
         self.assertNotIn("<audio", self.all.lower())
         self.assertNotIn(".mp3", self.all.lower())
