@@ -1,5 +1,7 @@
 # personal-site-lp
 
+[![QA](https://github.com/ger1e/personal-site-lp/actions/workflows/qa.yml/badge.svg)](https://github.com/ger1e/personal-site-lp/actions/workflows/qa.yml)
+
 Canonical source for **https://gergoilly.hu/** — a static-first personal landing page for threat hunting, cyber threat intelligence, and detection engineering.
 
 ## Production surface
