@@ -8,6 +8,6 @@
     "node": "24.x"
   },
   "dependencies": {
-    "@sentry/node": "10.70.0"
+    "@sentry/node": "10.71.0"
   }
 }
