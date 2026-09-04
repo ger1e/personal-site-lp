@@ -1,4 +1,11 @@
-# Glitch + Audio MAX Implementation Plan
+<!-- GER1E-DOC-SCHEMA: v1 -->
+<a id="glitch-audio-max-implementation-plan"></a>
+<div align="center">
+
+<strong>Glitch + Audio MAX Implementation Plan</strong><br/>
+<sub>GER1E // PERSONAL SITE LP // DOCUMENTATION</sub>
+
+</div>
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -10,7 +17,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-08-21-glitch-audio-max-design.md`
 
-## Global Constraints
+<a id="global-constraints"></a>
+<sub><strong>01 // Global Constraints</strong></sub>
 
 - IBM Carbon/Cobalt baseline remains the visual source of truth.
 - No hardware LEDs.
@@ -22,7 +30,8 @@
 
 ---
 
-### Task 1: Regression contract
+<a id="task-1-regression-contract"></a>
+<sub><strong>02 // Task 1: Regression contract</strong></sub>
 
 **Files:**
 - Modify: `tests/test_cyberpunk_max.py`
@@ -37,7 +46,8 @@
 - [ ] Assert no hardware LED labels/components are introduced.
 - [ ] Run `python -m unittest discover -s tests -v` and confirm the new assertions fail for missing functionality.
 
-### Task 2: Shared FX controller and permanent rain
+<a id="task-2-shared-fx-controller-and-permanent-rain"></a>
+<sub><strong>03 // Task 2: Shared FX controller and permanent rain</strong></sub>
 
 **Files:**
 - Modify: `index.html`
@@ -52,7 +62,8 @@
 - [ ] Emit `output`, `type`, `backspace`, `execute`, `success`, `error`, `link`, and `boot` from existing interaction paths.
 - [ ] Run unit tests and confirm Matrix-removal/event-bus assertions pass.
 
-### Task 3: Visual glitch stack
+<a id="task-3-visual-glitch-stack"></a>
+<sub><strong>04 // Task 3: Visual glitch stack</strong></sub>
 
 **Files:**
 - Modify: `index.html`
@@ -71,7 +82,8 @@
 - [ ] Disable autonomous heavy effects under reduced motion.
 - [ ] Run unit tests.
 
-### Task 4: Procedural Web Audio cues
+<a id="task-4-procedural-web-audio-cues"></a>
+<sub><strong>05 // Task 4: Procedural Web Audio cues</strong></sub>
 
 **Files:**
 - Modify: `index.html`
@@ -89,7 +101,8 @@
 - [ ] Add sound command autocomplete/help text.
 - [ ] Run unit tests.
 
-### Task 5: Full regression and preview verification
+<a id="task-5-full-regression-and-preview-verification"></a>
+<sub><strong>06 // Task 5: Full regression and preview verification</strong></sub>
 
 **Files:**
 - Verify: `index.html`, `vercel.json`, `tests/*`, `.github/workflows/*`
@@ -103,3 +116,5 @@
 - [ ] Inspect PR preview or deployment response for successful 200 render and absence of runtime errors.
 - [ ] Verify `/403` and `/404` remain genuine status routes.
 - [ ] Review final diff for accidental Matrix controls, hardware LEDs, RGB/VHS effects, external audio assets, or unrelated refactors.
+
+<p align="center"><sub>GER1E // PERSONAL SITE LP // MOBILE-SAFE DOCUMENTATION</sub></p>

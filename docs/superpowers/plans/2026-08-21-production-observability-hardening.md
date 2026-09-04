@@ -1,4 +1,11 @@
-# Production Observability and Hardening Implementation Plan
+<!-- GER1E-DOC-SCHEMA: v1 -->
+<a id="production-observability-and-hardening-implementation-plan"></a>
+<div align="center">
+
+<strong>Production Observability and Hardening Implementation Plan</strong><br/>
+<sub>GER1E // PERSONAL SITE LP // DOCUMENTATION</sub>
+
+</div>
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -10,7 +17,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-08-21-production-observability-hardening-design.md`
 
-## Global Constraints
+<a id="global-constraints"></a>
+<sub><strong>01 // Global Constraints</strong></sub>
 
 - No frontend framework migration.
 - No Sentry profiling dependency for current error handlers.
@@ -23,7 +31,8 @@
 
 ---
 
-### Task 1: Dependency reproducibility
+<a id="task-1-dependency-reproducibility"></a>
+<sub><strong>02 // Task 1: Dependency reproducibility</strong></sub>
 
 **Files:** `package.json`, `package-lock.json`, `.github/workflows/qa.yml`, `tests/test_qa.py`, `scripts/qa.py`
 
@@ -31,7 +40,8 @@
 - [ ] Verify the PR check fails before the lockfile exists.
 - [ ] Generate and commit the lockfile, switch CI to `npm ci --ignore-scripts --no-audit --no-fund`, and rerun checks.
 
-### Task 2: Sentry privacy and runtime contract
+<a id="task-2-sentry-privacy-and-runtime-contract"></a>
+<sub><strong>03 // Task 2: Sentry privacy and runtime contract</strong></sub>
 
 **Files:** `instrument.js`, `index.html`, `tests/test_qa.py`, `scripts/qa.py`
 
@@ -39,7 +49,8 @@
 - [ ] Make only the minimum configuration changes required to satisfy the contract.
 - [ ] Rerun tests and structural QA.
 
-### Task 3: Serverless handler error-path verification
+<a id="task-3-serverless-handler-error-path-verification"></a>
+<sub><strong>04 // Task 3: Serverless handler error-path verification</strong></sub>
 
 **Files:** `.github/workflows/qa.yml`, `tests/test_qa.py`
 
@@ -47,7 +58,8 @@
 - [ ] Update the CI Node smoke script to assert the complete response contract.
 - [ ] Rerun the smoke test and Python suite.
 
-### Task 4: CSP and repository security regression gates
+<a id="task-4-csp-and-repository-security-regression-gates"></a>
+<sub><strong>05 // Task 4: CSP and repository security regression gates</strong></sub>
 
 **Files:** `scripts/qa.py`, `tests/test_qa.py`
 
@@ -55,7 +67,8 @@
 - [ ] Add a narrow secret-pattern audit that rejects Sentry auth tokens and PEM private-key headers while permitting the public Sentry DSN.
 - [ ] Rerun the suite and structural audit.
 
-### Task 5: Documentation truthfulness and deployment state
+<a id="task-5-documentation-truthfulness-and-deployment-state"></a>
+<sub><strong>06 // Task 5: Documentation truthfulness and deployment state</strong></sub>
 
 **Files:** `README.md`, `SECURITY.md`
 
@@ -63,9 +76,12 @@
 - [ ] Document public DSN versus secret auth-token handling.
 - [ ] Document exact verification commands and platform checks.
 
-### Task 6: Final verification and production handoff
+<a id="task-6-final-verification-and-production-handoff"></a>
+<sub><strong>07 // Task 6: Final verification and production handoff</strong></sub>
 
 - [ ] Verify final branch/PR checks.
 - [ ] Inspect Vercel `personal-site-lp` deployment state.
 - [ ] If READY, verify `/`, `/403`, `/404`, headers, and runtime errors/logs.
 - [ ] If not deployed, do not deploy the legacy project; report the exact missing Git-link/domain action.
+
+<p align="center"><sub>GER1E // PERSONAL SITE LP // MOBILE-SAFE DOCUMENTATION</sub></p>

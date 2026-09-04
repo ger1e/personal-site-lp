@@ -1,3 +1,4 @@
+<!-- GER1E-DOC-SCHEMA: v1 -->
 <div align="center">
 
 <strong>PERSONAL SITE</strong><br/>
@@ -86,3 +87,5 @@ Production is considered verified only when the canonical Vercel project shows a
 <sub><strong>07 // SECURITY · LINKS</strong></sub>
 
 <sub>[`SECURITY.md`](SECURITY.md) · [Website](https://gergoilly.hu/) · [GitHub profile](https://github.com/ger1e) · [Threat hunting lab](https://github.com/ger1e/threat-hunting-lab) · [Legacy/experimental repo](https://github.com/ger1e/landing-pages)</sub>
+
+<p align="center"><sub>GER1E // PERSONAL SITE LP // MOBILE-SAFE DOCUMENTATION</sub></p>
