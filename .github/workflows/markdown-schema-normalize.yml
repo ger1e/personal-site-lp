@@ -1,0 +1,64 @@
+name: normalize-markdown-schema
+
+on:
+  push:
+    paths:
+      - '.github/workflows/markdown-schema-normalize.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Normalize every tracked Markdown document
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch='docs/ger1e-markdown-schema'
+          git checkout -B "$branch"
+          python - <<'PY'
+          from pathlib import Path
+          import re, subprocess
+          repo = Path.cwd().name.upper().replace('-', ' ')
+          files = subprocess.check_output(['git', 'ls-files', '*.md'], text=True).splitlines()
+          def slugify(text):
+              text=re.sub(r'<[^>]+>','',text); text=re.sub(r'[`*_~]','',text).strip().lower(); text=re.sub(r'[^a-z0-9\s-]','',text); return re.sub(r'[\s-]+','-',text).strip('-') or 'section'
+          def normalize(path):
+              p=Path(path); text=p.read_text(encoding='utf-8')
+              if p.name=='CLAUDE.md' and text.strip().startswith('@') and '\n' not in text.strip(): return
+              out=[]; in_fence=False; section=0; first_heading=True
+              for line in text.splitlines():
+                  if re.match(r'^\s*(```|~~~)',line): in_fence=not in_fence; out.append(line); continue
+                  if not in_fence:
+                      m=re.match(r'^(#{1,6})\s+(.+?)\s*#*\s*$',line)
+                      if m:
+                          level=len(m.group(1)); title=m.group(2).strip(); anchor=slugify(title)
+                          if first_heading:
+                              out += [f'<a id="{anchor}"></a>','<div align="center">','',f'<strong>{title}</strong><br/>',f'<sub>GER1E // {repo} // DOCUMENTATION</sub>','','</div>']; first_heading=False
+                          elif level<=3:
+                              section+=1; out += [f'<a id="{anchor}"></a>',f'<sub><strong>{section:02d} // {title}</strong></sub>']
+                          else: out += [f'<a id="{anchor}"></a>',f'<strong>{title}</strong>']
+                          continue
+                      if '<img ' in line:
+                          def fix(m): return f'width={m.group(1)}100%{m.group(1)}' if int(m.group(2))>360 else m.group(0)
+                          line=re.sub(r'width=(["\'])(\d+)\1',fix,line)
+                  out.append(line)
+              result='\n'.join(out).rstrip()+'\n'; marker='<!-- GER1E-DOC-SCHEMA: v1 -->'
+              if not result.startswith('<!-- PARA11AX-DOC-STANDARD:') and not result.startswith(marker): result=marker+'\n'+result
+              footer=f'GER1E // {repo} // MOBILE-SAFE DOCUMENTATION'
+              if 'PΛRΛ11ΛX // PER ASPERA AD ASTRA' not in result and footer not in result: result+=f'\n<p align="center"><sub>{footer}</sub></p>\n'
+              p.write_text(result,encoding='utf-8')
+          for path in files: normalize(path)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- '*.md'
+          if git diff --cached --quiet; then echo 'No Markdown normalization changes required.'; exit 0; fi
+          git commit -m 'docs: normalize GER1E markdown schema'
+          git push --force-with-lease origin HEAD:"$branch"
