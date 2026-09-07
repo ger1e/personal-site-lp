@@ -12,7 +12,11 @@ BUNDLE_HOST = "browser.sentry-cdn.com"
 class SentryIntegrationTests(unittest.TestCase):
     def test_node_sdk_is_pinned(self):
         package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
-        self.assertEqual(package["dependencies"]["@sentry/node"], "10.70.0")
+        lock = json.loads((ROOT / "package-lock.json").read_text(encoding="utf-8"))
+        version = package["dependencies"]["@sentry/node"]
+        self.assertRegex(version, r"^\d+\.\d+\.\d+$")
+        self.assertEqual(lock["packages"][""]["dependencies"]["@sentry/node"], version)
+        self.assertEqual(lock["packages"]["node_modules/@sentry/node"]["version"], version)
         self.assertNotIn("@sentry/profiling-node", package["dependencies"])
 
     def test_node_instrumentation_is_privacy_hardened(self):
