@@ -230,6 +230,10 @@ def audit_repository(root: Path) -> list[str]:
 
     vercel = _parse_json(root / "vercel.json", failures) if (root / "vercel.json").is_file() else None
     if isinstance(vercel, dict):
+        git_config = vercel.get("git")
+        deployment_policy = git_config.get("deploymentEnabled") if isinstance(git_config, dict) else None
+        if deployment_policy != {"**": False, "main": True}:
+            failures.append("vercel.json must enforce the main-only Git deployment policy")
         routes = vercel.get("routes")
         if not isinstance(routes, list):
             failures.append("vercel.json is missing routes")

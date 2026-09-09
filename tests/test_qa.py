@@ -127,6 +127,7 @@ class RepositoryAuditTests(unittest.TestCase):
         (root / "vercel.json").write_text(
             json.dumps(
                 {
+                    "git": {"deploymentEnabled": {"**": False, "main": True}},
                     "routes": [
                         {
                             "src": "/(.*)",
@@ -159,6 +160,20 @@ class RepositoryAuditTests(unittest.TestCase):
             encoding="utf-8",
         )
         self.assertTrue(any("content-security-policy" in failure.lower() for failure in audit_repository(root)))
+
+    def test_globally_disabled_git_deployments_are_reported(self):
+        root = self.make_repo()
+        config = json.loads((root / "vercel.json").read_text(encoding="utf-8"))
+        config["git"]["deploymentEnabled"] = False
+        (root / "vercel.json").write_text(json.dumps(config), encoding="utf-8")
+        self.assertTrue(any("main-only git deployment" in failure.lower() for failure in audit_repository(root)))
+
+    def test_malformed_git_deployment_policy_is_reported_without_crashing(self):
+        root = self.make_repo()
+        config = json.loads((root / "vercel.json").read_text(encoding="utf-8"))
+        config["git"] = "disabled"
+        (root / "vercel.json").write_text(json.dumps(config), encoding="utf-8")
+        self.assertTrue(any("main-only git deployment" in failure.lower() for failure in audit_repository(root)))
 
     def test_missing_local_asset_is_reported(self):
         root = self.make_repo(VALID_HTML.replace("/favicon.svg", "/missing.svg"))
