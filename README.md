@@ -53,7 +53,7 @@ python -m http.server 8080
 
 ```bash
 python -m unittest discover -s tests -p 'test_*.py' -v
-python scripts/qa.py
+python scripts/qa_runtime.py
 ```
 
 GitHub Actions additionally performs a clean `npm ci`, executes both serverless handlers with Sentry network delivery disabled, validates status/body/cache/noindex behavior, then runs the full Python regression suite and structural audit.
@@ -80,7 +80,7 @@ The DSN embedded in frontend/runtime code is a public client identifier, not an 
 
 `ger1e/personal-site-lp` and the Vercel project named `personal-site-lp` are canonical. The older `ger1e/landing-pages` / `git-landing-page` deployment is legacy/experimental and must not be used as proof that this repository is live.
 
-Production is considered verified only when the canonical Vercel project shows a READY deployment from `main` and `/`, `/403`, and `/404` have been checked on that deployment. Git-repository linkage and domain attachment are Vercel account/platform settings rather than repository code.
+Production is considered verified only when the canonical Vercel project shows a READY deployment from `main` and `/`, `/403`, and `/404` have been checked on that deployment. Repository configuration disables Git deployments for every branch except `main`; Git-repository linkage and domain attachment remain Vercel account/platform settings.
 
 </details>
 
