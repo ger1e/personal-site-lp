@@ -18,24 +18,23 @@ class CanonicalBlueSiteContract(unittest.TestCase):
         cls.all = "\n".join((cls.html, cls.css, cls.js, cls.portrait_fix))
 
     def test_identity_and_visual_contract(self):
-        for token in ("GERGŐ ILLY","CYBERSECURITY PROFESSIONAL","Cybersecurity Consultant / Cyber Threat Hunter","Budapest, Hungary","visitor@gergoilly.hu: ~ — zsh"):
+        for token in ("GERGŐ ILLY","CYBERSECURITY PROFESSIONAL","Cybersecurity Consultant / Cyber Threat Hunter","visitor@gergoilly.hu: ~ — zsh"):
             self.assertIn(token, self.all)
         for color in ("#0f62fe","#78a9ff","#02060d"):
             self.assertIn(color, self.all.lower())
-        self.assertNotIn("CIGANY.EXE", self.all)
-        self.assertNotIn("rotund-operator", self.all)
-        self.assertNotIn("spotify", self.all.lower())
+        for forbidden in ("Budapest", "IBM", "CIGANY.EXE", "rotund-operator", "spotify"):
+            self.assertNotIn(forbidden.lower(), self.all.lower())
 
     def test_canonical_boot_and_modules(self):
         for token in ("connecting to gergoilly.hu...","handshake complete","PTY allocated","cat /etc/motd.d/pepe","init landing_page --navigator","loading ${m.padEnd(18)}","navigator initialized","status ready","⣿⣿⣿⣿⣿⣿"):
             self.assertIn(token, self.all)
 
-    def test_ibm_header_and_single_activity_led(self):
-        self.assertIn("icons/ibm.svg", self.html)
+    def test_neutral_header_and_single_activity_led(self):
+        self.assertIn(">GER1E<", self.html)
         self.assertIn('id="status-led"', self.html)
         self.assertIn(".status-led", self.css)
-        for token in ("PWR", "NET LED", "TTY LED", "IO LED", "hardware-led", "led-bank"):
-            self.assertNotIn(token, self.all)
+        for token in ("icons/ibm.svg", "ibm-logo", "PWR", "NET LED", "TTY LED", "IO LED", "hardware-led", "led-bank"):
+            self.assertNotIn(token.lower(), self.all.lower())
 
     def test_portrait_and_links(self):
         self.assertIn('src="data:image/gif;base64,', self.html)
@@ -45,12 +44,13 @@ class CanonicalBlueSiteContract(unittest.TestCase):
         self.assertGreater(total, 25_000)
         self.assertIn("data:image/webp;base64,", self.portrait_fix)
         self.assertIn("Array.from({length:6}", self.portrait_fix)
-        self.assertIn('href="mailto:mail@gergoilly.hu"', self.html)
-        self.assertIn('aria-label="Email Gergő Illy"', self.html)
+        self.assertIn('href="https://github.com/ger1e"', self.html)
+        self.assertIn('aria-label="Gergő Illy on GitHub"', self.html)
         self.assertIn('href="https://linkedin.com/in/gergoilly"', self.html)
+        self.assertNotIn("mailto:", self.html)
 
     def test_terminal_rain_and_input_behavior(self):
-        for token in ('id="matrix-bg"','id="matrix-fg"',"Europe/Budapest","grid-template-rows:30px minmax(0,1fr) auto","overscroll-behavior:contain","history","ArrowUp","ArrowDown","Tab","speed:13.5","speed:23.5"):
+        for token in ('id="matrix-bg"','id="matrix-fg"',"grid-template-rows:30px minmax(0,1fr) auto","overscroll-behavior:contain","history","ArrowUp","ArrowDown","Tab","speed:13.5","speed:23.5"):
             self.assertIn(token, self.all)
         self.assertNotIn("matrix [normal|dense|off]", self.all)
         self.assertNotIn("base==='matrix'", self.all)
